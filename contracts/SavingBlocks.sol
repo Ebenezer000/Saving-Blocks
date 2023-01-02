@@ -99,33 +99,76 @@ contract SavingBlock is ReentrancyGuard{
         ///@notice Flag to check when a user is signed Up False when they are not
         bool signedUp;
     }
-    
+
+    /**
+     * @dev struct to confirm user recieved a grant from another 
+     * @notice GuarantorChecker must be accessed by mapping 
+     *         GUARANTORCHECKER
+     * */
     struct GuarantorChecker{
-      address guarantorAddress; // Address of user to act as guarrantor
-      bool guarranteed; // flag to check when user has guaranteed lending 
+        ///@notice Address of user to act as guarrantor
+        address guarantorAddress;
+
+        ///@notice flag to check when user has guaranteed lending 
+        bool guarranteed;
     }
+
+    /**
+     * @dev struct to act as public database of users 
+     * @notice AdminData is initialised as ADMINDATA
+     * */
     struct AdminData{
+        ///@notice Total amount of users registered to the system
         uint totalUsers; //Total amount of users registered to the system
+
+        ///@notice 
         uint totalUSDTSaved; // Total amount of USDT saved to the system
+
+        ///@notice 
         uint totalUSDTWithdrawn; // Total amount of USDT withdrawn from the system
+
+        ///@notice 
         uint totalUSDTLended; // Total amount of USDT lended to users
+
+        ///@notice 
         uint totalAdminBonus; // Total amout of USDT earned by Admin Referrals
     }
 
-    mapping(address => UserFinance) public USERFINANCE; //mapping to access UserFinance struct
-    mapping(address => UserDatabase) public USERDATABASE; // mapping to access userDatabase struct
-    mapping(address =>mapping (address => GuarantorChecker)) public GUARANTORCHECKER; // mapping to access guarantor list
-    AdminData public ADMINDATA; // mapping to access adminData struct
+    ///@notice mapping to access UserFinance struct
+    mapping(address => UserFinance) public USERFINANCE;
 
+    ///@notice mapping to access userDatabase struct
+    mapping(address => UserDatabase) public USERDATABASE;
+
+    ///@notice mapping to access guarantor list
+    mapping(address =>mapping (address => GuarantorChecker)) public GUARANTORCHECKER;
+
+    ///@notice mapping to access adminData struct
+    AdminData public ADMINDATA;
+
+    ///@notice 
     event NewUserAdded(address userAccountNumber, address DirectUpline);
+
+    ///@notice 
     event DepositSuccessful(address userAccountNumber,uint totalDeposit, uint depositAfterFee);
+
+    ///@notice 
     event BorrowingSuccessful(address borrowerAccount, uint AmountBorrowed);
+
+    ///@notice 
     event UserWithdrawCompleted(address withdrawAccount, uint withdrawAmount);
+
+    ///@notice 
     event AdminWithdrawCompleted(address AdminAddress, uint Amount);
+
+
     /**
     * @dev add addmin Owner address and Usdt contract address
     * @notice for security admin address is private and not public
-    * @param _admin, _usdt [Admin address for owner contract , usdt address of token]
+    * Params:
+    *       @param _admin Admin address for owner contract
+    *       @param _usdt usdt address of token
+    *       
     */
     constructor(address _admin, IERC20 _usdt, uint _decimal, uint _signupFee){
         Admin = _admin;

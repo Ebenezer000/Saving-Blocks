@@ -143,22 +143,22 @@ contract SavingBlock is ReentrancyGuard{
     ///@notice mapping to access guarantor list
     mapping(address =>mapping (address => GuarantorChecker)) public GUARANTORCHECKER;
 
-    ///@notice mapping to access adminData struct
+    ///@notice instantiation of adminData struct
     AdminData public ADMINDATA;
 
-    ///@notice 
+    ///@notice Event emitted when a new User has Signed Up
     event NewUserAdded(address userAccountNumber, address DirectUpline);
 
-    ///@notice 
+    ///@notice Event emitted when a user makes a Deposit
     event DepositSuccessful(address userAccountNumber,uint totalDeposit, uint depositAfterFee);
 
-    ///@notice 
+    ///@notice Event emitted When a user burrows successfully
     event BorrowingSuccessful(address borrowerAccount, uint AmountBorrowed);
 
-    ///@notice 
+    ///@notice Event emitted when a user makes a withdrawal and closes their account 
     event UserWithdrawCompleted(address withdrawAccount, uint withdrawAmount);
 
-    ///@notice 
+    ///@notice Event emitted when admin makes a withdrawal
     event AdminWithdrawCompleted(address AdminAddress, uint Amount);
 
 

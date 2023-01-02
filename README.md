@@ -1,8 +1,20 @@
-# Sample Hardhat Project
+# Savings Block
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+This is a basic Savigs platform that Extends a Multi Level Marketing System for referrals 
+Users can act as guarrantors for other users and Take Loans from the Vault of the smart contract
 
-Try running some of the following tasks:
+### Public Functions
+- ##### Signup
+- ##### Save
+- ##### LendWithReferrals
+- ##### LendWithGuarrantors
+- ##### UserWithdraw
+- ##### AdminWithdraw
+
+## Tasks
+
+This Project was initialised using HardHat 
+You can try running some of the folloeing tasks
 
 ```shell
 npx hardhat help

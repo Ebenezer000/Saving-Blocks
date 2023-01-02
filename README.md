@@ -20,7 +20,7 @@ Users can act as guarrantors for other users and Take Loans from the Vault of th
     
 
 - ##### Save
-* @dev external function to Save with reentrancy guard to control _save function
+    * @dev external function to Save with reentrancy guard to control _save function
     * @notice for security the Save function is nonReentrant to prevent attacks
     * @param amount[_amount which is the total amount of usdt in the transaction]
     
@@ -58,7 +58,7 @@ Users can act as guarrantors for other users and Take Loans from the Vault of th
 - ##### AdminWithdraw
     * @dev external function to Withdraw admin USDT
     * @param amount[_amount which is amount of usdt the user wants to withdraw from the system]
-    
+
     * REQUIREMENTS: 
     *   The user / msg.sender must be an accepted admin address
     *   The user cannot be the Dead address

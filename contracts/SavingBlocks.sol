@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -170,7 +170,12 @@ contract SavingBlock is ReentrancyGuard{
     *       @param _usdt usdt address of token
     *       
     */
-    constructor(address _admin, IERC20 _usdt, uint _decimal, uint _signupFee){
+    constructor(
+        address _admin, 
+        IERC20 _usdt, 
+        uint _decimal, 
+        uint _signupFee
+        ){
         Admin = _admin;
         USDT = _usdt;
         Decimal = 10**_decimal;
@@ -190,55 +195,77 @@ contract SavingBlock is ReentrancyGuard{
     *   The user must have granted usdt allowance
     *   The user cannot refer themselves
     */
-    function SignUp(address _referrer) public {
-      UserDatabase storage USER = USERDATABASE[msg.sender];
-      UserDatabase storage REFER = USERDATABASE[_referrer];
-      uint allowance = USDT.allowance(msg.sender, address(this));
-      require (_referrer != Dead,
-              "You cannot send to the dead address");
-      require (USER.signedUp == false, 
-              "This user is already signed up for this service");
-      require (REFER.signedUp != false || _referrer == Admin, 
-              "The referrer is not yet signed up to this service");
-      require (_referrer != msg.sender, 
-              "You cannot refer yourself");
-      require (allowance >= SignUpFee, "You have not allowed this contract to collect the Sign up fee");
-      /*
-      * A conditional is used to check the address of the referrer
-      * If conditional fails:
-      *   A dead address is assigned to referrer 1
-      */
-      if (_referrer != Admin) {
-          USER.DirectUpline = _referrer;
-          REFER.downlineAdresses.push(msg.sender);
-      }else{
-          USER.DirectUpline = Admin;
-      }
-      USDT.transferFrom(msg.sender, address(this), SignUpFee);
-      USER.DirectUpline = _referrer;
-      ADMINDATA.totalUsers += 1;
-      ADMINDATA.totalAdminBonus += SignUpFee;
-      USER.signedUp = true;
-      emit NewUserAdded(msg.sender, _referrer);
+    function SignUp(
+        address _referrer
+        ) public {
+        UserDatabase storage USER = USERDATABASE[msg.sender];
+        UserDatabase storage REFER = USERDATABASE[_referrer];
+
+        //checker to confirm user has approved this fee before signup
+        uint allowance = USDT.allowance(msg.sender, address(this));
+
+        require (_referrer != Dead,
+                "You cannot send to the dead address");
+        require (USER.signedUp == false, 
+                "This user is already signed up for this service");
+        require (REFER.signedUp != false || _referrer == Admin, 
+                "The referrer is not yet signed up to this service");
+        require (_referrer != msg.sender, 
+                "You cannot refer yourself");
+        require (allowance >= SignUpFee, 
+        "You have not allowed this contract to collect the Sign up fee");
+        /*
+        * A conditional is used to check the address of the referrer
+        * If conditional fails:
+        *   A dead address is assigned to referrer 1
+        */
+        if (_referrer != Admin) {
+            USER.DirectUpline = _referrer;
+            REFER.downlineAdresses.push(msg.sender);
+        }else{
+            USER.DirectUpline = Admin;
+        }
+        USDT.transferFrom(msg.sender, address(this), SignUpFee);
+        USER.DirectUpline = _referrer;
+        ADMINDATA.totalUsers += 1;
+        ADMINDATA.totalAdminBonus += SignUpFee;
+        USER.signedUp = true;
+        emit NewUserAdded(msg.sender, _referrer);
     }
 
 
     /**
     * @dev internal function to control and effect savings
     * @notice for security the _save function is private and holds the save effects
-    * @param _amount, _referral [Admin address for owner contract , usdt address of token]
+    * Params:
+    *       @param _amount Admin address for owner contract 
     */
     function _save(uint _amount) internal {
         UserFinance storage USERBAL = USERFINANCE[msg.sender];
         UserDatabase storage USERDAT = USERDATABASE[msg.sender];
+
+        //uint to calculate 90% of deposit
         uint NinetyPercent = _amount.sub(_amount.div(100).mul(10));
+        //uint to calculate 10% of deposit
         uint TenPercent = _amount.sub(NinetyPercent);
+        //uint to calculate 2% of deposit
         uint TwoPercent = TenPercent.div(5);
+        //uint to calculate 4% of deposit
         uint FourPercent = TwoPercent.add(TwoPercent);
+        //uint to calculate 8% of deposit
         uint EightPercent = FourPercent.add(FourPercent);
+
+        //add deposit to user total savings
         USERBAL.totalSavings += _amount;
+        //add 90% to users actual savings 
         USERBAL.Savings += NinetyPercent;
+        //updat main database with new deposit
         ADMINDATA.totalUSDTSaved += (_amount);
+
+        /*
+        * A conditional to confirm and distribute percentage earnings upwards
+        * Direct Upline cannot be Dead address
+        */
         if (USERDAT.DirectUpline != Admin && USERDAT.DirectUpline != Dead) {
             USERFINANCE[USERDAT.DirectUpline].totalReferralEarned += TwoPercent; 
             address referrer2 = USERDATABASE[USERDAT.DirectUpline].DirectUpline;
@@ -255,6 +282,8 @@ contract SavingBlock is ReentrancyGuard{
         }else{
           ADMINDATA.totalAdminBonus += TenPercent;
         }
+
+        // Emit event to show successful deposit
         emit DepositSuccessful(msg.sender, _amount, NinetyPercent);
     }
 
@@ -271,49 +300,6 @@ contract SavingBlock is ReentrancyGuard{
               "YOU DO NOT HAVE ENOUGH USDT TO COMPLETE THIS TANSACTION");
       _save(amount);    
       return(true);
-    }
-
-    /**
-    * @dev public function to calculate weather a user can burrow
-    */
-    function publicLendCalculator(uint amount)external view returns (bool){
-      UserDatabase storage USERDAT = USERDATABASE[msg.sender];
-      bool ValidLending;
-      uint downLenderBalance;
-      uint count = 0;
-      for (uint i = 0; i < (USERDAT.allApprovedLenders).length ; i++){
-        if (USERDAT.downlineAdresses[count] != Dead){
-            downLenderBalance = USDT.balanceOf(USERDAT.downlineAdresses[count]);
-            count++;
-        }else{
-          count++;
-        }
-        if (amount <= downLenderBalance){
-            ValidLending = true;
-        }else{
-          ValidLending = false;
-        }
-      }
-      return (ValidLending);
-    }
-
-    /**
-    * @dev internal function to calculate the amount a user is allowed to burrow
-    */
-    function _lendCalculator()internal returns (uint){
-      UserDatabase storage USERDAT = USERDATABASE[msg.sender];
-      uint count = 0;
-      for (uint i = 0; i < (USERDAT.allApprovedLenders).length ; i++){
-        if (USERDAT.downlineAdresses[count] != Dead){
-            uint downLenderBalance = USDT.balanceOf(USERDAT.downlineAdresses[count]);
-            uint totalLenderbalance = downLenderBalance;
-            USERDAT.totalLenderbalance += totalLenderbalance;
-            count++;
-        }else{
-          count++;
-        }
-      }
-      return (USERDAT.totalLenderbalance);
     }
 
     /**

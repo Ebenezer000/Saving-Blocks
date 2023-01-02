@@ -185,7 +185,7 @@ contract SavingBlock is ReentrancyGuard{
     /**
     * @dev external function to track and manage user signup
     * @notice for security the Save function is nonReentrant to prevent attacks
-    * @param _referrer array [referrer which are the addresses of the referrals the user has]
+    * @param _referrer [referrer which is the address of the referrer the user has]
     * REQUIREMENTS: 
     *   The user / msg.sender must hold the equivalent signup fee of $10
     *   The user cannot be referred by the Dead address
@@ -306,6 +306,7 @@ contract SavingBlock is ReentrancyGuard{
     * @dev external function to Lend usdt from the savings block system
     * @notice for security the Save function is nonReentrant to prevent attacks
     * @param amount[_amount which is amount of usdt the user wants to borrow from the system]
+    * 
     *REQUIREMENTS: 
     *   The user / msg.sender must have collateral equal or more than the amout wanted
     *   The user cannot be the Dead address
@@ -359,7 +360,7 @@ contract SavingBlock is ReentrancyGuard{
       ADMINDATA.totalUSDTWithdrawn += amount;
     }
     /**
-    * @dev internal function to Lend usdt from the savings block system
+    * @dev external function to Lend usdt from the savings block system
     * @notice for security the Save function is nonReentrant to prevent attacks
     * @param amount[_amount which is amount of usdt the user wants to borrow from the system]
     *REQUIREMENTS: 
@@ -376,7 +377,7 @@ contract SavingBlock is ReentrancyGuard{
 
 
     /**
-    * @dev internal function to Withdraw admin USDT
+    * @dev external function to Withdraw admin USDT
     * @param amount[_amount which is amount of usdt the user wants to withdraw from the system]
     *REQUIREMENTS: 
     *   The user / msg.sender must be an accepted admin address

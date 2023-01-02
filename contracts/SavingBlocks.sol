@@ -146,19 +146,35 @@ contract SavingBlock is ReentrancyGuard{
     ///@notice instantiation of adminData struct
     AdminData public ADMINDATA;
 
-    ///@notice Event emitted when a new User has Signed Up
+    /// @notice Event emitted when a new User has Signed Up
+    ///Params:
+    ///     @param userAccountNumber holds the address of the new user that signed up
+    ///     @param DirectUpline holds the address of the referee as the direct upline
     event NewUserAdded(address userAccountNumber, address DirectUpline);
 
-    ///@notice Event emitted when a user makes a Deposit
+    /// @notice Event emitted when a user makes a Deposit
+    ///Params:
+    ///     @param userAccountNumber holds the address of the user that made a deposit
+    ///     @param totalDeposit holds ammount of money the user put in during his saving
+    ///     @param depositAfterFee holds the amount of money that was charged as fee for the savings
     event DepositSuccessful(address userAccountNumber,uint totalDeposit, uint depositAfterFee);
 
-    ///@notice Event emitted When a user burrows successfully
+    /// @notice Event emitted When a user burrows successfully
+    ///Params:
+    ///     @param borrowerAccount holds the address of the burrower
+    ///     @param AmountBorrowed holds ammount of money burrowed by the user during this transaction
     event BorrowingSuccessful(address borrowerAccount, uint AmountBorrowed);
 
-    ///@notice Event emitted when a user makes a withdrawal and closes their account 
+    /// @notice Event emitted when a user makes a withdrawal and closes their account 
+    ///Params:
+    ///     @param withdrawAccount holds the address of the withdrawer
+    ///     @param withdrawAmount holds ammount of money withdrawn by the user during this transaction
     event UserWithdrawCompleted(address withdrawAccount, uint withdrawAmount);
 
-    ///@notice Event emitted when admin makes a withdrawal
+    /// @notice Event emitted when admin makes a withdrawal
+    ///Params:
+    ///     @param AdminAddress holds the address of the withdrawer
+    ///     @param Amount holds ammount of money withdrawn by the user during this transaction
     event AdminWithdrawCompleted(address AdminAddress, uint Amount);
 
 
@@ -311,12 +327,11 @@ contract SavingBlock is ReentrancyGuard{
     *   The user / msg.sender must have collateral equal or more than the amout wanted
     *   The user cannot be the Dead address
     */
-    function LendWithReferrals(uint amount) external nonReentrant returns (bool){
-      require (msg.sender != Dead, "The Dead address is not allowed to lend or Burrow");
+    function LendWithReferrals(uint amount, uint _collateral) external nonReentrant returns (bool){
       UserFinance storage USERBAL = USERFINANCE[msg.sender];
-      uint Collateral = _lendCalculator();
-
-      require (Collateral >= amount, "Your Collateral is lesser then the amount you want to burrow");
+      
+      require (msg.sender != Dead, "The Dead address is not allowed to lend or Burrow");
+      require (_collateral >= amount, "Your Collateral is lesser then the amount you want to burrow");
       USDT.transfer(msg.sender, amount);
       USERBAL.totalUSDTBorrowed += amount;
       USERBAL.totalUSDTOwed += amount;

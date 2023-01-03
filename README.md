@@ -66,7 +66,7 @@ Users can act as guarrantors for other users and Take Loans from the Vault of th
 ## Tasks
 
 This Project was initialised using HardHat 
-You can try running some of the folloeing tasks
+You can try running some of the following tasks
 
 ```shell
 npx hardhat help

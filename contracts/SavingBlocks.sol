@@ -405,18 +405,26 @@ contract SavingBlock is ReentrancyGuard{
         //Check that user has signed up for this service
         require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
 
+        UserFinance storage USERBAL = USERFINANCE[msg.sender];
+
+        GuarantorChecker storage GUARANTOR = GUARANTORCHECKER[msg.sender];
+        // amount of Burrowed money each guarantor owed individually
+        uint eachOwed = amount/guarantors.length;
         //loop through list of guarantors one by one 
         for (uint i; i < guarantors.length; i++) {
             // Confirm that no guarantor is a Dead address
             require (guarantors[i] != Dead, "One of your guarantors is the DEaD address");
 
-            //equally divide owed money between guarantors
+            //Instantiate each guarantor
+            guarantor_details storage GUARANTORDETAILS = GUARANTOR.GuarantorDetails[msg.sender][guarantors[i]];
 
-
+            //pass the amount of money owed by each guarantor into the inferface
+            GUARANTORDETAILS.amountGuaranteed = eachOwed;
         }
 
-        // amount of Burrowed money each guarantor owed individually
-        uint eachOwed = amount/guarantors.length
+        
+        
+
 
         //if all checks are passed and all guarantors are utilized 
         // if all checks pass, transfer the amount of USDT to user wallet

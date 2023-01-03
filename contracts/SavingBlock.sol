@@ -194,6 +194,8 @@ contract SavingBlock is ReentrancyGuard{
     * Params:
     *       @param _admin Admin address for owner contract
     *       @param _usdt usdt address of token
+    *       @param _decimal shows the decimal value of the chosen USDT token
+    *       @param _signupFee holds the fee each user pays on signup
     *       
     */
     constructor(

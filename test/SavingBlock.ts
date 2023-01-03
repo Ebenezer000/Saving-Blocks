@@ -15,9 +15,10 @@ describe("Saving Block Contract", function () {
         const decimal = 6;
 
         const _token = await ethers.getContractFactory("Token")
-        const Token = _token.deploy(initialSupply, tokenName, symbol, decimal);
+        const Token = await _token.deploy(initialSupply, tokenName, symbol, decimal);
+        await Token.deployed();
 
-        const _usdt = (await Token).address;
+        const _usdt = Token.address;
         const _signupFee = 10;      
 
         const _savingBlock = await ethers.getContractFactory("SavingBlock");

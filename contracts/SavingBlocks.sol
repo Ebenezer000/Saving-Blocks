@@ -107,10 +107,19 @@ contract SavingBlock is ReentrancyGuard{
      * */
     struct GuarantorChecker{
         ///@notice Address of user to act as guarrantor
-        address guarantorAddress;
+        address [] guarantorAddress;
 
-        ///@notice flag to check when user has guaranteed lending 
-        bool guarranteed;
+        ///@notice Total number of guarantors
+        uint totalguarantors;
+
+        mapping (address => mapping (address => guarantor_details)) GuarantorDetails;
+    }
+
+    struct guarantor_details{
+        uint amountGuaranteed;
+        uint paymentDeadLine;
+        bool Paid;
+
     }
 
     /**
@@ -132,6 +141,7 @@ contract SavingBlock is ReentrancyGuard{
 
         ///@notice 
         uint totalAdminBonus; // Total amout of USDT earned by Admin Referrals
+
     }
 
     ///@notice mapping to access UserFinance struct
@@ -141,7 +151,7 @@ contract SavingBlock is ReentrancyGuard{
     mapping(address => UserDatabase) public USERDATABASE;
 
     ///@notice mapping to access guarantor list
-    mapping(address =>mapping (address => GuarantorChecker)) public GUARANTORCHECKER;
+    mapping(address => GuarantorChecker) public GUARANTORCHECKER;
 
     ///@notice instantiation of adminData struct
     AdminData public ADMINDATA;
@@ -255,8 +265,14 @@ contract SavingBlock is ReentrancyGuard{
     * @notice for security the _save function is private and holds the save effects
     * Params:
     *       @param _amount Admin address for owner contract 
+    * REQUIREMENTS: 
+    *   The user / msg.sender must have signed up to use this service
     */
     function _save(uint _amount) internal {
+
+        //Check that user has signed up for this service
+        require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
+        
         UserFinance storage USERBAL = USERFINANCE[msg.sender];
         UserDatabase storage USERDAT = USERDATABASE[msg.sender];
 
@@ -310,6 +326,8 @@ contract SavingBlock is ReentrancyGuard{
     *
     * REQUIREMENTS: 
     *   The user / msg.sender must hold the equivalent usdt sent to contract
+    *   The user / msg.sender must have signed up to use this service
+    * @return true if transaction is successfull
     */
     function Save(uint amount) external nonReentrant returns (bool){
       require (USDT.balanceOf(msg.sender) >= amount, 
@@ -324,20 +342,38 @@ contract SavingBlock is ReentrancyGuard{
     * @param amount[_amount which is amount of usdt the user wants to borrow from the system]
     * 
     *REQUIREMENTS: 
+        The user / msg.sender must have signed up to use this service
     *   The user / msg.sender must have collateral equal or more than the amout wanted
     *   The user cannot be the Dead address
+    * @return true if transaction is successfull
     */
     function LendWithReferrals(uint amount, uint _collateral) external nonReentrant returns (bool){
-      UserFinance storage USERBAL = USERFINANCE[msg.sender];
-      
-      require (msg.sender != Dead, "The Dead address is not allowed to lend or Burrow");
-      require (_collateral >= amount, "Your Collateral is lesser then the amount you want to burrow");
-      USDT.transfer(msg.sender, amount);
-      USERBAL.totalUSDTBorrowed += amount;
-      USERBAL.totalUSDTOwed += amount;
-      ADMINDATA.totalUSDTLended += amount;
-      emit BorrowingSuccessful(msg.sender, amount);
-      return(true);
+        
+        UserFinance storage USERBAL = USERFINANCE[msg.sender];
+
+        //Check that user has signed up for this service
+        require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
+
+        //check that message sender is not the dead address
+        require (msg.sender != Dead, "The Dead address is not allowed to lend or Burrow");
+
+        //check that the amount burrowed is not less than users withdrawal amount
+        require (_collateral >= amount, "Your Collateral is lesser then the amount you want to burrow");
+
+        // if all checks pass, transfer the amount of USDT to user wallet
+        USDT.transfer(msg.sender, amount);
+
+        //if all checks pass, add burrowed USDT amount to user finance
+        USERBAL.totalUSDTBorrowed += amount;
+        USERBAL.totalUSDTOwed += amount;
+
+        //if all checks pass, update admin database
+        ADMINDATA.totalUSDTLended += amount;
+
+        // Emit event to show successful deposit
+        emit BorrowingSuccessful(msg.sender, amount);
+
+        return(true);
     }
 
     /**
@@ -345,34 +381,44 @@ contract SavingBlock is ReentrancyGuard{
     * @notice for security the Save function is nonReentrant to prevent attacks
     * @param amount[_amount which is amount of usdt the user wants to borrow from the system]
     *REQUIREMENTS: 
+    *   The user / msg.sender must have signed up to use this service
     *   The user / msg.sender must have collateral equal or more than the amout wanted
     *   The user cannot be the Dead address
+    * @return true if transaction is successfull
     */
     function LendWithGuarrantors(uint amount, address [] memory guarantors) external nonReentrant returns(bool){
-      require (guarantors[Dead] == false, "One of your guarantors is the DEaD address");
-      GuarantorChecker storage GUARANTOR = GUARANTORCHECKER[lender][msg.sender];
-      for(uint i = 0; i < guarantors.legth ; i++) {
-        require(GUARANTOR.guaranteed == true, "YOU HAVE NOT YET BEEN GRANTED A GUARANTEE FROM THIS USER");
-      }
+        //Check that user has signed up for this service
+        require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
 
-    }
+        //loop through list of guarantors one by one 
+        for (uint i; i < guarantors.length; i++) {
+            // Confirm that no guarantor is a Dead address
+            require (guarantors[i] != Dead, "One of your guarantors is the DEaD address");
 
-    function AcceptGuarantor(address lender) public {
-      GuarantorChecker storage GUARANTOR = GUARANTORCHECKER[lender][msg.sender];
-      GUARANTOR.guarranteed = true;
+
+        }
+    
+
     }
 
     /**
     * @dev internal function to Lend usdt from the savings block system
     * @notice for security the Save function is nonReentrant to prevent attacks
     * @param amount[_amount which is amount of usdt the user wants to borrow from the system]
-    
+    * *REQUIREMENTS: 
+    *   The user / msg.sender must have signed up to use this service
     */
     function _userWithdraw(uint amount) internal {
-      UserFinance storage USERBAL = USERFINANCE[msg.sender];
-      USERBAL.totalSavings -= amount;
-      USERBAL.Savings -= amount;
-      ADMINDATA.totalUSDTWithdrawn += amount;
+        //Check that user has signed up for this service
+        require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
+
+        //If all checks pass update user finance
+        UserFinance storage USERBAL = USERFINANCE[msg.sender];
+        USERBAL.totalSavings -= amount;
+        USERBAL.Savings -= amount;
+
+        //if all checks pass update admin data
+        ADMINDATA.totalUSDTWithdrawn += amount;
     }
     /**
     * @dev external function to Lend usdt from the savings block system
@@ -383,11 +429,14 @@ contract SavingBlock is ReentrancyGuard{
     *   The user cannot be the Dead address
     */
     function UserWithdraw(uint amount) external nonReentrant {
-      require(msg.sender != Dead);
-      UserFinance storage USERBAL = USERFINANCE[msg.sender];
-      require(USERBAL.Savings >= amount, "Insufficient Saving block funds");
-      _userWithdraw(amount);
-      emit UserWithdrawCompleted(msg.sender, amount);
+        //Check that user has signed up for this service
+        require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
+
+        require(msg.sender != Dead);
+        UserFinance storage USERBAL = USERFINANCE[msg.sender];
+        require(USERBAL.Savings >= amount, "Insufficient Saving block funds");
+        _userWithdraw(amount);
+        emit UserWithdrawCompleted(msg.sender, amount);
     }
 
 
@@ -397,13 +446,15 @@ contract SavingBlock is ReentrancyGuard{
     *REQUIREMENTS: 
     *   The user / msg.sender must be an accepted admin address
     *   The user cannot be the Dead address
+    * @return true if transaction is successfull
     */
     function AdminWithdraw(uint amount) external nonReentrant returns(bool){
-      require(msg.sender == Admin, "Only the admin can use this function");
-      require(msg.sender != Dead, "The dead address cannot call this function");
-      ADMINDATA.totalAdminBonus -= amount;
-      USDT.transfer(msg.sender, amount);
-      emit AdminWithdrawCompleted(msg.sender, amount);
-      return true;
+
+        require(msg.sender == Admin, "Only the admin can use this function");
+        require(msg.sender != Dead, "The dead address cannot call this function");
+        ADMINDATA.totalAdminBonus -= amount;
+        USDT.transfer(msg.sender, amount);
+        emit AdminWithdrawCompleted(msg.sender, amount);
+        return true;
     }
 }

@@ -23,7 +23,8 @@ describe("Saving Block Contract", function () {
 
         const _savingBlock = await ethers.getContractFactory("SavingBlock");
 
-        const SavingBlock = _savingBlock.deploy(admin.toString(), _usdt, decimal, _signupFee);
+        const SavingBlock = await _savingBlock.deploy(admin.toString(), _usdt, decimal, _signupFee);
+        await SavingBlock.deployed();
 
         return { SavingBlock, admin, _usdt, decimal, _signupFee, user1, user2, user3, user4 };
     }
@@ -32,7 +33,7 @@ describe("Saving Block Contract", function () {
         const { SavingBlock, user1, user2 }  = await loadFixture(deploySavingBlockFixture);
         
         await expect(
-            await SavingBlock.connect(user1).SignUp(user2)
+            await SavingBlock.connect(user1).SignUp(user2.toString())
         ).to.emit(SavingBlock, "NewUserAdded");
 
     });

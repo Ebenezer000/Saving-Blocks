@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SavingBlock } from '../typechain-types/contracts/SavingBlock.sol/SavingBlock';
+import { SavingBlock, NewUserAddedEvent } from '../typechain-types/contracts/SavingBlock.sol/SavingBlock';
 
 describe("Saving Block Contract", function () {
     
@@ -28,9 +28,11 @@ describe("Saving Block Contract", function () {
     }
 
     it("It should be successful during signup and give referrals", async function() {
-        const [SavingBlock, admin, user1, user2] = await loadFixture(deploySavingBlockFixture);
-
+        const { SavingBlock, user1, user2 }  = await loadFixture(deploySavingBlockFixture);
         
+        await expect(
+            await SavingBlock.connect(user1).SignUp(user2)
+        ).to.emit(SavingBlock, "NewUserAdded");
 
     });
 });

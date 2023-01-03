@@ -454,11 +454,6 @@ contract SavingBlock is ReentrancyGuard{
 
 
         return(true);
-
-    }
-
-    function ForefitBurrowedFunds() public nonReentrant returns (bool) {
-
     }
 
     /**

@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -251,12 +251,23 @@ contract SavingBlock is ReentrancyGuard{
         }else{
             USER.DirectUpline = Admin;
         }
+
+        //if all conditional and checks pass, 
+        //transfer Fee from user address to contract
         USDT.transferFrom(msg.sender, address(this), SignUpFee);
+
+        //set refferer as Direct upline
         USER.DirectUpline = _referrer;
+
+        //if all checks pass update admin database
         ADMINDATA.totalUsers += 1;
         ADMINDATA.totalAdminBonus += SignUpFee;
+
+        //confirm user has signed up for this service
         USER.signedUp = true;
         emit NewUserAdded(msg.sender, _referrer);
+        console.log("A new User with address (%o), Signed up to use this service with referrer (%o) at block timestamp of (%o)", msg.sender, _referrer, block.timestamp);
+
     }
 
 
@@ -317,6 +328,8 @@ contract SavingBlock is ReentrancyGuard{
 
         // Emit event to show successful deposit
         emit DepositSuccessful(msg.sender, _amount, NinetyPercent);
+        console.log("User address (%o), made a Deposit of (%o) at block timestamp of (%o)", msg.sender, _amount, block.timestamp);
+
     }
 
     /**
@@ -372,6 +385,8 @@ contract SavingBlock is ReentrancyGuard{
 
         // Emit event to show successful deposit
         emit BorrowingSuccessful(msg.sender, amount);
+        console.log("User address (%o), made Burrowed (%o) at block timestamp of (%o)", msg.sender, amount, block.timestamp);
+
 
         return(true);
     }
@@ -395,9 +410,35 @@ contract SavingBlock is ReentrancyGuard{
             // Confirm that no guarantor is a Dead address
             require (guarantors[i] != Dead, "One of your guarantors is the DEaD address");
 
+            //equally divide owed money between guarantors
+
 
         }
-    
+
+        // amount of Burrowed money each guarantor owed individually
+        uint eachOwed = amount/guarantors.length
+
+        //if all checks are passed and all guarantors are utilized 
+        // if all checks pass, transfer the amount of USDT to user wallet
+        USDT.transfer(msg.sender, amount);
+
+        //if all checks pass, add burrowed USDT amount to user finance
+        USERBAL.totalUSDTBorrowed += amount;
+        USERBAL.totalUSDTOwed += amount;
+
+        //if all checks pass, update admin database
+        ADMINDATA.totalUSDTLended += amount;
+
+        // Emit event to show successful deposit
+        emit BorrowingSuccessful(msg.sender, amount);
+        console.log("User address (%o), made Burrowed (%o) at block timestamp of (%o)", msg.sender, amount, block.timestamp);
+
+
+        return(true);
+
+    }
+
+    function ForefitBurrowedFunds() public nonReentrant returns (bool) {
 
     }
 
@@ -443,6 +484,8 @@ contract SavingBlock is ReentrancyGuard{
 
         // Emit event to show transaction was completed
         emit UserWithdrawCompleted(msg.sender, amount);
+        console.log("User address (%o), made withdrawal of (%o) at block timestamp of (%o)", msg.sender, amount, block.timestamp);
+
     }
 
 
@@ -469,6 +512,12 @@ contract SavingBlock is ReentrancyGuard{
         
         //Emit event to show successful withdrawal by admin
         emit AdminWithdrawCompleted(msg.sender, amount);
+        console.log("Admin address (%o), made withdrawal of (%o) at block timestamp of (%o)", msg.sender, amount, block.timestamp);
         return true;
     }
+    /**
+     * Update Function before Deployment 
+    function EmgentWithd(uint amount) external nonReentrant returns(bool) {
+    }
+    */
 }

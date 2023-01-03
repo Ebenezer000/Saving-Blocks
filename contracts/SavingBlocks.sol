@@ -429,13 +429,19 @@ contract SavingBlock is ReentrancyGuard{
     *   The user cannot be the Dead address
     */
     function UserWithdraw(uint amount) external nonReentrant {
-        //Check that user has signed up for this service
-        require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
-
+        //Check that user address is not the dead address
         require(msg.sender != Dead);
+
+        //Instantiate User Finance
         UserFinance storage USERBAL = USERFINANCE[msg.sender];
+
+        //Check that user has enough balance to complete withdrawal
         require(USERBAL.Savings >= amount, "Insufficient Saving block funds");
+        
+        //if all checks pass, then send amount to internal function to complete tansaction
         _userWithdraw(amount);
+
+        // Emit event to show transaction was completed
         emit UserWithdrawCompleted(msg.sender, amount);
     }
 
@@ -449,11 +455,19 @@ contract SavingBlock is ReentrancyGuard{
     * @return true if transaction is successfull
     */
     function AdminWithdraw(uint amount) external nonReentrant returns(bool){
-
+        // Check that message sender is admin and grant access to function
         require(msg.sender == Admin, "Only the admin can use this function");
+
+        //check that message sender is not he dead address
         require(msg.sender != Dead, "The dead address cannot call this function");
+
+        //if all checks pass, update admin database
         ADMINDATA.totalAdminBonus -= amount;
+
+        //if all checks pass, transfer USDT to admin address
         USDT.transfer(msg.sender, amount);
+        
+        //Emit event to show successful withdrawal by admin
         emit AdminWithdrawCompleted(msg.sender, amount);
         return true;
     }

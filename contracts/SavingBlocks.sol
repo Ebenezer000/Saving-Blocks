@@ -325,6 +325,8 @@ contract SavingBlock is ReentrancyGuard{
         }else{
           ADMINDATA.totalAdminBonus += TenPercent;
         }
+        //if all checks pass move USDT from user wallet to contact
+        USDT.transferFrom(msg.sender,address(this), _amount.mul(Decimal));
 
         // Emit event to show successful deposit
         emit DepositSuccessful(msg.sender, _amount, NinetyPercent);
@@ -343,7 +345,7 @@ contract SavingBlock is ReentrancyGuard{
     * @return true if transaction is successfull
     */
     function Save(uint amount) external nonReentrant returns (bool){
-      require (USDT.balanceOf(msg.sender) >= amount, 
+      require (USDT.balanceOf(msg.sender) >= amount**Decimal, 
               "YOU DO NOT HAVE ENOUGH USDT TO COMPLETE THIS TANSACTION");
       _save(amount);    
       return(true);
@@ -374,7 +376,7 @@ contract SavingBlock is ReentrancyGuard{
         require (_collateral >= amount, "Your Collateral is lesser then the amount you want to burrow");
 
         // if all checks pass, transfer the amount of USDT to user wallet
-        USDT.transfer(msg.sender, amount);
+        USDT.transfer(msg.sender, amount.mul(Decimal));
 
         //if all checks pass, add burrowed USDT amount to user finance
         USERBAL.totalUSDTBorrowed += amount;
@@ -401,7 +403,7 @@ contract SavingBlock is ReentrancyGuard{
     *   The user cannot be the Dead address
     * @return true if transaction is successfull
     */
-    function LendWithGuarrantors(uint amount, address [] memory guarantors) external nonReentrant returns(bool){
+    function LendWithGuarrantors(uint amount, address [] memory guarantors, uint deadline) external nonReentrant returns(bool){
         //Check that user has signed up for this service
         require(USERDATABASE[msg.sender].signedUp, "YOU HAVE NOT SIGNED UP FOR THIS SERVICE");
 
@@ -410,6 +412,10 @@ contract SavingBlock is ReentrancyGuard{
         GuarantorChecker storage GUARANTOR = GUARANTORCHECKER[msg.sender];
         // amount of Burrowed money each guarantor owed individually
         uint eachOwed = amount/guarantors.length;
+
+        //intantiate value for remainders
+        uint remainder = amount%guarantors.length;
+
         //loop through list of guarantors one by one 
         for (uint i; i < guarantors.length; i++) {
             // Confirm that no guarantor is a Dead address
@@ -420,15 +426,20 @@ contract SavingBlock is ReentrancyGuard{
 
             //pass the amount of money owed by each guarantor into the inferface
             GUARANTORDETAILS.amountGuaranteed = eachOwed;
+            GUARANTORDETAILS.paymentDeadLine = deadline;
         }
 
-        
-        
-
+        /*
+        * Conditional to give any remainders to firse guarantor
+        */
+        if  (remainder != 0) {
+            guarantor_details storage GUARANTORDETAILS = GUARANTOR.GuarantorDetails[msg.sender][guarantors[1]];
+            GUARANTORDETAILS.amountGuaranteed += remainder;
+        }
 
         //if all checks are passed and all guarantors are utilized 
-        // if all checks pass, transfer the amount of USDT to user wallet
-        USDT.transfer(msg.sender, amount);
+        //  transfer the amount of USDT to user wallet
+        USDT.transfer(msg.sender, amount.mul(Decimal));
 
         //if all checks pass, add burrowed USDT amount to user finance
         USERBAL.totalUSDTBorrowed += amount;
@@ -468,6 +479,9 @@ contract SavingBlock is ReentrancyGuard{
 
         //if all checks pass update admin data
         ADMINDATA.totalUSDTWithdrawn += amount;
+
+        //if all checks pass, transfer USDT to user
+        USDT.transfer(address(this), amount.mul(Decimal));
     }
     /**
     * @dev external function to Lend usdt from the savings block system

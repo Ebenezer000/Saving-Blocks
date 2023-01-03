@@ -8,7 +8,13 @@ describe("Saving Block Contract", function () {
 
         const [ admin, user1, user2, user3, user4 ] = await ethers.getSigners();
 
-        const _savingsBlock = ethers.getContractFactory("SavingsBlock")
+        const _usdt = "";
+        const _decimal = "";
+        const _signupFee = "";      
+
+        const _savingBlock = await ethers.getContractFactory("SavingsBlock");
+
+        const SavingBlock = _savingBlock.deploy()
         
     }
 });

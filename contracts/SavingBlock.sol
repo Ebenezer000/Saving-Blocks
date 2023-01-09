@@ -43,7 +43,7 @@ interface IERC20 {
  */
 contract SavingBlock is ReentrancyGuard{
     using SafeMath for uint;
-    address Dead = 0x000000000000000000000000000000000000dEaD;
+    address Dead = address(0);
 
     IERC20 public USDT; // Address of primary exchange token of contract
     address public Admin;

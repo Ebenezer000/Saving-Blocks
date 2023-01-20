@@ -5,6 +5,7 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
 /**
  * @title  Token
@@ -13,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  *         This contract creates a simple ERC20 token to act as USDT in SAVING BLOCK Tests
  */
 
-contract Token is ERC20, Ownable{
+contract Token is ERC20, Ownable, ERC20Burnable{
     // unsigned integer to hold decimal value of token
     uint8 decimal; 
 
